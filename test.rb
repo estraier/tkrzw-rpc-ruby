@@ -140,17 +140,10 @@ class TkrzwTest < Test::Unit::TestCase
     }
     count = 0
     dbm.each { |key, value|
+      assert_equal(key.to_i ** 2, value.to_i)
       count += 1
     }
     assert_equal(dbm.count, count)
-#    for key, value in dbm:
-#      self.assertEqual(int(key) ** 2, int(value))
-#      count += 1
-#    self.assertEqual(len(dbm), count)
-#    self.assertEqual(Status.SUCCESS, dbm.Disconnect)
-
-    
-
     assert_equal(Status::SUCCESS, dbm.disconnect)
   end
 
@@ -237,6 +230,85 @@ class TkrzwTest < Test::Unit::TestCase
     end
     iter.destruct    
     assert_equal(Status::SUCCESS, dbm.disconnect)
+  end
+
+  # Thread tests
+  def test_thread
+    dbm = RemoteDBM.new
+    assert_equal(Status::SUCCESS, dbm.connect("localhost:1978"))
+    assert_equal(Status::SUCCESS, dbm.clear)
+    is_ordered = ["TreeDBM", "SkipDBM", "BabyDBM", "StdTreeDBM"].include?(
+                   dbm.inspect_details["class"])
+    rnd_state = Random.new
+    num_records = 1000
+    num_threads = 5
+    records = {}
+    tasks = []
+    (0...num_threads).each do |param_thid|
+      th = Thread.new(param_thid) do |thid|
+        (0...num_records).each do |i|
+          key_num = rnd_state.rand(num_records)
+          key_num = key_num - key_num % num_threads + thid
+          key = key_num.to_s
+          value = (key_num * key_num).to_s
+          if rnd_state.rand(num_records) == 0
+            assert_equal(Status::SUCCESS, dbm.rebuild)
+          elsif rnd_state.rand(10) == 0
+            iter = dbm.make_iterator
+            iter.jump(key)
+            status = Status.new
+            record = iter.get(status)
+            if status == Status::SUCCESS
+              assert_equal(2, record.size)
+              if not is_ordered
+                assert_equal(key, record[0])
+                assert_equal(value, record[1])
+              end
+              status = iter.next
+              assert_true(status == Status::SUCCESS || status == Status::NOT_FOUND_ERROR)
+            end
+            iter.destruct
+          elsif rnd_state.rand(4) == 0
+            status = Status.new
+            rec_value = dbm.get(key, status)
+            if status == Status::SUCCESS
+              assert_equal(value, rec_value)
+            else
+              assert_equal(Status::NOT_FOUND_ERROR, status)
+            end
+          elsif rnd_state.rand(4) == 0
+            status = dbm.remove(key)
+            if status == Status::SUCCESS
+              records.delete(key)
+            else
+              assert_equal(Status::NOT_FOUND_ERROR, status)
+            end
+          else
+            overwrite = rnd_state.rand(2) == 0
+            status = dbm.set(key, value, overwrite)
+            if status == Status::SUCCESS
+              records[key] = value
+            else
+              assert_equal(Status::DUPLICATION_ERROR, status)
+            end
+          end
+          if rnd_state.rand(10) == 0
+            Thread.pass
+          end
+        end
+      end
+      tasks.push(th)
+    end
+    tasks.each do |th|
+      th.join
+    end
+    iter_records = {}
+    dbm.each do |key, value|
+      iter_records[key] = value
+    end
+    assert_equal(records, iter_records)
+    assert_equal(Status::SUCCESS, dbm.disconnect)
+    dbm.destruct
   end
 end
 

@@ -16,7 +16,7 @@
 require 'grpc'
 require 'tkrzw_rpc_pb'
 
-module TkrzwRpc
+module TkrzwRPC
   module DBMService
     # Definition of the database service.
     class Service
@@ -27,30 +27,30 @@ module TkrzwRpc
       self.unmarshal_class_method = :decode
       self.service_name = 'tkrzw_rpc.DBMService'
 
-      rpc :Echo, ::TkrzwRpc::EchoRequest, ::TkrzwRpc::EchoResponse
-      rpc :Inspect, ::TkrzwRpc::InspectRequest, ::TkrzwRpc::InspectResponse
-      rpc :Get, ::TkrzwRpc::GetRequest, ::TkrzwRpc::GetResponse
-      rpc :GetMulti, ::TkrzwRpc::GetMultiRequest, ::TkrzwRpc::GetMultiResponse
-      rpc :Set, ::TkrzwRpc::SetRequest, ::TkrzwRpc::SetResponse
-      rpc :SetMulti, ::TkrzwRpc::SetMultiRequest, ::TkrzwRpc::SetMultiResponse
-      rpc :Remove, ::TkrzwRpc::RemoveRequest, ::TkrzwRpc::RemoveResponse
-      rpc :RemoveMulti, ::TkrzwRpc::RemoveMultiRequest, ::TkrzwRpc::RemoveMultiResponse
-      rpc :Append, ::TkrzwRpc::AppendRequest, ::TkrzwRpc::AppendResponse
-      rpc :AppendMulti, ::TkrzwRpc::AppendMultiRequest, ::TkrzwRpc::AppendMultiResponse
-      rpc :CompareExchange, ::TkrzwRpc::CompareExchangeRequest, ::TkrzwRpc::CompareExchangeResponse
-      rpc :Increment, ::TkrzwRpc::IncrementRequest, ::TkrzwRpc::IncrementResponse
-      rpc :CompareExchangeMulti, ::TkrzwRpc::CompareExchangeMultiRequest, ::TkrzwRpc::CompareExchangeMultiResponse
-      rpc :Count, ::TkrzwRpc::CountRequest, ::TkrzwRpc::CountResponse
-      rpc :GetFileSize, ::TkrzwRpc::GetFileSizeRequest, ::TkrzwRpc::GetFileSizeResponse
-      rpc :Clear, ::TkrzwRpc::ClearRequest, ::TkrzwRpc::ClearResponse
-      rpc :Rebuild, ::TkrzwRpc::RebuildRequest, ::TkrzwRpc::RebuildResponse
-      rpc :ShouldBeRebuilt, ::TkrzwRpc::ShouldBeRebuiltRequest, ::TkrzwRpc::ShouldBeRebuiltResponse
-      rpc :Synchronize, ::TkrzwRpc::SynchronizeRequest, ::TkrzwRpc::SynchronizeResponse
-      rpc :Search, ::TkrzwRpc::SearchRequest, ::TkrzwRpc::SearchResponse
-      rpc :Stream, stream(::TkrzwRpc::StreamRequest), stream(::TkrzwRpc::StreamResponse)
-      rpc :Iterate, stream(::TkrzwRpc::IterateRequest), stream(::TkrzwRpc::IterateResponse)
-      rpc :Replicate, ::TkrzwRpc::ReplicateRequest, stream(::TkrzwRpc::ReplicateResponse)
-      rpc :ChangeMaster, ::TkrzwRpc::ChangeMasterRequest, ::TkrzwRpc::ChangeMasterResponse
+      rpc :Echo, ::TkrzwRPC::EchoRequest, ::TkrzwRPC::EchoResponse
+      rpc :Inspect, ::TkrzwRPC::InspectRequest, ::TkrzwRPC::InspectResponse
+      rpc :Get, ::TkrzwRPC::GetRequest, ::TkrzwRPC::GetResponse
+      rpc :GetMulti, ::TkrzwRPC::GetMultiRequest, ::TkrzwRPC::GetMultiResponse
+      rpc :Set, ::TkrzwRPC::SetRequest, ::TkrzwRPC::SetResponse
+      rpc :SetMulti, ::TkrzwRPC::SetMultiRequest, ::TkrzwRPC::SetMultiResponse
+      rpc :Remove, ::TkrzwRPC::RemoveRequest, ::TkrzwRPC::RemoveResponse
+      rpc :RemoveMulti, ::TkrzwRPC::RemoveMultiRequest, ::TkrzwRPC::RemoveMultiResponse
+      rpc :Append, ::TkrzwRPC::AppendRequest, ::TkrzwRPC::AppendResponse
+      rpc :AppendMulti, ::TkrzwRPC::AppendMultiRequest, ::TkrzwRPC::AppendMultiResponse
+      rpc :CompareExchange, ::TkrzwRPC::CompareExchangeRequest, ::TkrzwRPC::CompareExchangeResponse
+      rpc :Increment, ::TkrzwRPC::IncrementRequest, ::TkrzwRPC::IncrementResponse
+      rpc :CompareExchangeMulti, ::TkrzwRPC::CompareExchangeMultiRequest, ::TkrzwRPC::CompareExchangeMultiResponse
+      rpc :Count, ::TkrzwRPC::CountRequest, ::TkrzwRPC::CountResponse
+      rpc :GetFileSize, ::TkrzwRPC::GetFileSizeRequest, ::TkrzwRPC::GetFileSizeResponse
+      rpc :Clear, ::TkrzwRPC::ClearRequest, ::TkrzwRPC::ClearResponse
+      rpc :Rebuild, ::TkrzwRPC::RebuildRequest, ::TkrzwRPC::RebuildResponse
+      rpc :ShouldBeRebuilt, ::TkrzwRPC::ShouldBeRebuiltRequest, ::TkrzwRPC::ShouldBeRebuiltResponse
+      rpc :Synchronize, ::TkrzwRPC::SynchronizeRequest, ::TkrzwRPC::SynchronizeResponse
+      rpc :Search, ::TkrzwRPC::SearchRequest, ::TkrzwRPC::SearchResponse
+      rpc :Stream, stream(::TkrzwRPC::StreamRequest), stream(::TkrzwRPC::StreamResponse)
+      rpc :Iterate, stream(::TkrzwRPC::IterateRequest), stream(::TkrzwRPC::IterateResponse)
+      rpc :Replicate, ::TkrzwRPC::ReplicateRequest, stream(::TkrzwRPC::ReplicateResponse)
+      rpc :ChangeMaster, ::TkrzwRPC::ChangeMasterRequest, ::TkrzwRPC::ChangeMasterResponse
     end
 
     Stub = Service.rpc_stub_class

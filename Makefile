@@ -67,6 +67,10 @@ apidocclean :
 
 pbrb : tkrzw_rpc.proto
 	grpc_tools_ruby_protoc -I . --ruby_out=. --grpc_out=. tkrzw_rpc.proto
+	sed -e 's/TkrzwRpc/TkrzwRPC/g' tkrzw_rpc_pb.rb > tkrzw_rpc_pb.rb~ ;\
+	  mv -f tkrzw_rpc_pb.rb~ tkrzw_rpc_pb.rb
+	sed -e 's/TkrzwRpc/TkrzwRPC/g' tkrzw_rpc_services_pb.rb > tkrzw_rpc_services_pb.rb~ ;\
+	  mv -f tkrzw_rpc_services_pb.rb~ tkrzw_rpc_services_pb.rb
 
 .PHONY: all clean install uninstall dist distclean check apidoc apidocclean pbrb
 

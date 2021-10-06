@@ -260,7 +260,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
   end
 end
 
-module TkrzwRpc
+module TkrzwRPC
   StatusProto = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.StatusProto").msgclass
   StringPair = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.StringPair").msgclass
   BytesPair = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.BytesPair").msgclass

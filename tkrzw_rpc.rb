@@ -10,8 +10,6 @@ require 'tkrzw_rpc_services_pb'
 
 # Namespace of Tkrzw-RPC.
 module TkrzwRPC
-  include TkrzwRpc
-
   # Status of operations.
   class Status
     # Success.
@@ -204,6 +202,7 @@ module TkrzwRPC
   # Remote database manager.
   # All operations except for "connect" and "disconnect" are thread-safe; Multiple threads can access the same database concurrently.
   class RemoteDBM
+    include TkrzwRPC
     attr_reader :channel, :stub, :timeout, :dbm_index, :encoding
     
     # Does nothing especially.
@@ -458,7 +457,7 @@ module TkrzwRPC
       end
       request = RemoveRequest.new
       request.dbm_index = @dbm_index
-      request.key = make_string(make_string(key))
+      request.key = make_string(key)
       begin
         response = @stub.remove(request)
       rescue GRPC::BadStatus => error
@@ -883,7 +882,7 @@ module TkrzwRPC
       end
       request = RemoveRequest.new
       request.dbm_index = @dbm_index
-      request.key = make_string(make_string(key))
+      request.key = make_string(key)
       begin
         response = @stub.remove(request)
       rescue GRPC::BadStatus
@@ -895,14 +894,18 @@ module TkrzwRPC
     # Calls the given block with the key and the value of each record
     def each(&block)
       iter = make_iterator
-      iter.first
-      while true
-        record = iter.get
-        if not record
-          break
+      begin
+        iter.first
+        while true
+          record = iter.get
+          if not record
+            break
+          end
+          yield record[0], record[1]
+          iter.next
         end
-        yield record[0], record[1]
-        iter.next
+      ensure
+        iter.destruct
       end
     end
   end
@@ -955,6 +958,8 @@ module TkrzwRPC
   # Iterator for each record.
   # An iterator is made by the "make_iterator" method of DBM.  Every unused iterator object should be destructed explicitly by the "destruct" method to free resources.
   class Iterator
+    include TkrzwRPC
+    
     # Initializes the iterator.
     # @param dbm The database to scan.
     def initialize(dbm)
@@ -1248,7 +1253,8 @@ module TkrzwRPC
     end
   end
 
-  private
+  module_function
+
   def grpc_code_name(code)
     k = GRPC::Core::StatusCodes.constants.find { |k|
       GRPC::Core::StatusCodes.const_get(k) == code
@@ -1256,7 +1262,6 @@ module TkrzwRPC
     k ? k.to_s : "unknonw"
   end
 
-  private
   def str_grpc_error(error)
     code_name = grpc_code_name(error.code)
     details = error.details
@@ -1266,17 +1271,14 @@ module TkrzwRPC
     code_name
   end
 
-  private
   def make_status_from_proto(proto_status)
     return Status.new(proto_status.code, proto_status.message)
   end
 
-  private
   def set_status_from_proto(status, proto_status)
     status.set(proto_status.code, proto_status.message)
   end
 
-  private
   def make_string(obj)
     str = obj.to_s
     str.force_encoding("ASCII-8BIT")
