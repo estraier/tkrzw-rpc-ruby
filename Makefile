@@ -7,9 +7,10 @@ PACKAGETGZ = $(PACKAGE)-$(VERSION).tar.gz
 
 RUBY = ruby
 RUNENV = LD_LIBRARY_PATH=.:/lib:/usr/lib:/usr/local/lib:$(HOME)/lib
+MODULEFILES = tkrzw_rpc_pb.rb tkrzw_rpc.rb tkrzw_rpc_services_pb.rb
 
 all :
-	echo $(PYTHON) setup.py install
+	$(RUBY) -I. tkrzw_rpc.rb
 	@printf '\n'
 	@printf '#================================================================\n'
 	@printf '# Ready to install.\n'
@@ -20,15 +21,18 @@ clean :
 	  hoge moge tako ika uni tkrzw_rpc/*~
 
 install :
-	echo $(PYTHON) setup.py install
+	sitelibdir=`$(RUBY) -e 'puts(RbConfig::CONFIG["sitelibdir"])'` ; \
+	  mkdir -p $$sitelibdir ; \
+	  cp -f $(MODULEFILES) $$sitelibdir
 	@printf '\n'
 	@printf '#================================================================\n'
 	@printf '# Thanks for using Tkrzw-RPC for Ruby.\n'
 	@printf '#================================================================\n'
 
 uninstall :
-	echo $(PYTHON) setup.py install --record files.tmp
-	xargs rm -f < files.tmp
+	sitelibdir=`$(RUBY) -e 'puts(RbConfig::CONFIG["sitelibdir"])'` ; \
+	  cd $$sitelibdir ; \
+	  rm -f $(MODULEFILES)
 
 dist :
 	$(MAKE) distclean
