@@ -1,0 +1,31 @@
+===============================================================
+ Ruby client library of Tkrzw-RPC
+================================================================
+
+Please read the following documents.
+
+  COPYING           - license
+  CONTRIBUTING.md   - how to contribute
+
+This package provides a Python client library to access the service
+via gRPC protocol.  This package is independent of the core library
+of Tkrzw.  You don't have to install the core library.  Meanwhile,
+you have to install the library of gRPC for Python as described in
+the official document.  Ruby 2.7 or later is required to use this
+package.
+
+Enter the directory of the extracted package then perform installation.
+If your system has the another command except for the "ruby"
+command, edit the Makefile beforehand.  Then, run these commands.
+
+ make
+ sudo make install
+
+To perform the tests, run these command on two respective terminals.
+
+ tkrzw_server
+ make check
+
+Thanks.
+
+== END OF FILE ==
