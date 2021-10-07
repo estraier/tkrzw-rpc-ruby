@@ -22,12 +22,48 @@ def main
   printf("address: %s\n", address)
   printf("num_iterations: %d\n", num_iterations)
   printf("num_threads: %d\n", num_threads)
-  printf("is_random: %s", is_random)
+  printf("is_random: %s\n", is_random)
   printf("\n")
   GC.start
   dbm = RemoteDBM.new
   dbm.connect(address).or_die
   dbm.clear.or_die
+  print("Echoing:\n")
+  start_time = Time.now
+  tasks = []
+  (0...num_threads).each do |param_thid|
+    th = Thread.new(param_thid) do |thid|
+      rnd_state = Random.new(thid)
+      (0...num_iterations).each do |i|
+        if is_random
+          key_num = rnd_state.rand(num_iterations * num_threads)
+        else
+          key_num = thid * num_iterations + i
+        end
+        key = "%08d" % key_num
+        dbm.echo(key)
+        seq = i + 1
+        if thid == 0 and seq % (num_iterations / 500) == 0
+          print(".")
+          if seq % (num_iterations / 10) == 0
+            printf(" (%08d)\n", seq)
+          end
+        end
+      end
+    end
+    tasks.push(th)
+  end
+  tasks.each do |th|
+    th.join
+  end
+  dbm.synchronize(false).or_die
+  end_time = Time.now
+  elapsed = end_time - start_time
+  GC.start
+  printf("Echoing done: num_records=%d time=%.3f qps=%.0f\n",
+         dbm.count, elapsed, num_iterations * num_threads / elapsed)
+  printf("\n")
+  GC.start
   print("Setting:\n")
   start_time = Time.now
   tasks = []
