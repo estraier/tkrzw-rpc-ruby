@@ -247,7 +247,8 @@ module TkrzwRPC
       begin
         channel = GRPC::ClientStub.setup_channel(nil, address, :this_channel_is_insecure)
         deadline = Time.now + timeout
-        num_retries = 0
+        max_failures = 3
+        num_failures = 0
         while true do
           if Time.now > deadline
             channel.close
@@ -257,13 +258,15 @@ module TkrzwRPC
           if state == GRPC::Core::ConnectivityStates::READY
             break
           end
-          if state == GRPC::Core::ConnectivityStates::TRANSIENT_FAILURE or
-            state == GRPC::Core::ConnectivityStates::FATAL_FAILURE
-            if num_retries >= 3
-              channel.close
-              return Status.new(Status::PRECONDITION_ERROR, "connection failed")
-            end
-            num_retries += 1
+          if state == GRPC::Core::ConnectivityStates::TRANSIENT_FAILURE
+            num_failures += 1
+            puts(num_failures)
+          elsif state == GRPC::Core::ConnectivityStates::FATAL_FAILURE
+            num_failures = max_failures
+          end
+          if num_failures >= max_failures
+            channel.close
+            return Status.new(Status::PRECONDITION_ERROR, "connection failed")
           end
           channel.watch_connectivity_state(state, Time.now + 0.1) 
         end
