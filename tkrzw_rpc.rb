@@ -1,5 +1,17 @@
-#--
-# Ruby clint library of Tkrzw-RPC
+#! /usr/bin/ruby -I. -w
+# -*- coding: utf-8 -*-
+#--------------------------------------------------------------------------------------------------
+# Ruby client library of Tkrzw-RPC
+#
+# Copyright 2020 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+# except in compliance with the License.  You may obtain a copy of the License at
+#     https://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the
+# License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied.  See the License for the specific language governing permissions
+# and limitations under the License.
+#--------------------------------------------------------------------------------------------------
 #++
 #:include:overview.rd
 
@@ -216,6 +228,9 @@ module TkrzwRPC
 
     # Releases the resource explicitly.
     def destruct
+      if @channel
+        disconnect
+      end
       @channel = nil
       @stub = nil
     end
@@ -980,6 +995,9 @@ module TkrzwRPC
     def destruct
       @req_it.request = nil
       @req_it.event.set
+      @dbm = nil
+      @req_it = nil
+      @res_it = nil
     end
 
     # Initializes the iterator to indicate the first record.

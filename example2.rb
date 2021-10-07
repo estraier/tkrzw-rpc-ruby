@@ -52,7 +52,7 @@ begin
  
   # Rebuilds the database.
   # Optional parameters compatible with the database type can be given.
-  dbm.rebuild()
+  dbm.rebuild
  
   # Traverses records with an iterator.
   begin

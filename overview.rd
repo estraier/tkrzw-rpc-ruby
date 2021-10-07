@@ -1,4 +1,4 @@
-= Ruby clint library of Tkrzw-RPC
+= Ruby client library of Tkrzw-RPC
 
 Tkrzw-RPC: RPC interface of Tkrzw
 
@@ -105,7 +105,7 @@ The following code is a more complex example.  You should use "ensure" clauses t
    
     # Rebuilds the database.
     # Optional parameters compatible with the database type can be given.
-    dbm.rebuild()
+    dbm.rebuild
    
     # Traverses records with an iterator.
     begin

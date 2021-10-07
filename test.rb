@@ -230,6 +230,7 @@ class TkrzwTest < Test::Unit::TestCase
     end
     iter.destruct    
     assert_equal(Status::SUCCESS, dbm.disconnect)
+    dbm.destruct
   end
 
   # Thread tests
