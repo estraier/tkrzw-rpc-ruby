@@ -246,6 +246,27 @@ module TkrzwRPC
       timeout = timeout == nil ? 1 << 27 : timeout
       begin
         channel = GRPC::ClientStub.setup_channel(nil, address, :this_channel_is_insecure)
+        deadline = Time.now + timeout
+        num_retries = 0
+        while true do
+          if Time.now > deadline
+            channel.close
+            return Status.new(Status::PRECONDITION_ERROR, "connection timeout")
+          end
+          state = channel.connectivity_state(true)
+          if state == GRPC::Core::ConnectivityStates::READY
+            break
+          end
+          if state == GRPC::Core::ConnectivityStates::TRANSIENT_FAILURE or
+            state == GRPC::Core::ConnectivityStates::FATAL_FAILURE
+            if num_retries >= 3
+              channel.close
+              return Status.new(Status::PRECONDITION_ERROR, "connection failed")
+            end
+            num_retries += 1
+          end
+          channel.watch_connectivity_state(state, Time.now + 0.1) 
+        end
         stub = DBMService::Stub.new(address, :this_channel_is_insecure,
                                     channel_override: @channel, timeout: timeout)
       rescue GRPC::BadStatus => error
