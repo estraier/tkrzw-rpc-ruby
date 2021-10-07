@@ -41,7 +41,9 @@ def main
           key_num = thid * num_iterations + i
         end
         key = "%08d" % key_num
-        dbm.echo(key)
+        status = Status.new
+        dbm.echo(key, status)
+        status.or_die
         seq = i + 1
         if thid == 0 and seq % (num_iterations / 500) == 0
           print(".")
@@ -56,12 +58,11 @@ def main
   tasks.each do |th|
     th.join
   end
-  dbm.synchronize(false).or_die
   end_time = Time.now
   elapsed = end_time - start_time
   GC.start
-  printf("Echoing done: num_records=%d time=%.3f qps=%.0f\n",
-         dbm.count, elapsed, num_iterations * num_threads / elapsed)
+  printf("Echoing done: time=%.3f qps=%.0f\n",
+         elapsed, num_iterations * num_threads / elapsed)
   printf("\n")
   GC.start
   print("Setting:\n")
