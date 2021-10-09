@@ -260,7 +260,6 @@ module TkrzwRPC
           end
           if state == GRPC::Core::ConnectivityStates::TRANSIENT_FAILURE
             num_failures += 1
-            puts(num_failures)
           elsif state == GRPC::Core::ConnectivityStates::FATAL_FAILURE
             num_failures = max_failures
           end
