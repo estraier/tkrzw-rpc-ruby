@@ -327,6 +327,7 @@ module TkrzwRPC
 
     # Inspects the database.
     # @return A hash of property names and their values.
+    # If the DBM index is negative, basic metadata of all DBMs are obtained.
     def inspect_details
       result = {}
       if not @channel
