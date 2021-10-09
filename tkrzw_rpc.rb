@@ -212,7 +212,7 @@ module TkrzwRPC
   end
 
   # Remote database manager.
-  # All operations except for "connect" and "disconnect" are thread-safe; Multiple threads can access the same database concurrently.
+  # All operations except for "connect" and "disconnect" are thread-safe; Multiple threads can access the same database concurrently.  The "set_dbm_index" affects all threads so it should be called before the object is shared.
   class RemoteDBM
     include TkrzwRPC
     attr_reader :channel, :stub, :timeout, :dbm_index, :encoding
