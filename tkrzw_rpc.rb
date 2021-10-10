@@ -768,7 +768,7 @@ module TkrzwRPC
     # @param hard True to do physical synchronization with the hardware or false to do only logical synchronization with the file system.
     # @param params Optional parameters of a hash object.
     # @return The result status.
-    # Only SkipDBM uses the optional parameters.  The "merge" parameter specifies paths of databases to merge, separated by colon.  The "reducer" parameter specifies the reducer to apply to records of the same key.  "ReduceToFirst", "ReduceToSecond", "ReduceToLast", etc are supported.
+    # The "reducer" parameter specifies the reducer for SkipDBM.  "ReduceToFirst", "ReduceToSecond", "ReduceToLast", etc are supported.  If the parameter "make_backup" exists, a backup file is created in the same directory as the database file.  The backup file name has a date suffix in GMT, like ".backup.20210831213749".  If the value of "make_backup" not empty, it is the value is used as the suffix.
     def synchronize(hard, **params)
       if not @channel
         return Status.new(Status::PRECONDITION_ERROR, "not opened connection")
