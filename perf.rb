@@ -14,7 +14,7 @@ def main
   num_threads = 1
   is_random = false
   op = OptionParser.new
-  op.on('--address str') { |v| path = v }
+  op.on('--address str') { |v| address = v }
   op.on('--iter num') { |v| num_iterations = v.to_i }
   op.on('--threads num') { |v| num_threads = v.to_i }
   op.on('--random') { is_random = true }
