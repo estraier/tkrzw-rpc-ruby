@@ -228,6 +228,34 @@ class TkrzwTest < Test::Unit::TestCase
     else
       assert_equal(Status::NOT_IMPLEMENTED_ERROR, status)
     end
+
+    dbm.clear
+    dbm.push_last("one", 0)
+    dbm.push_last("two", 0)
+    assert_equal(Status::SUCCESS, iter.first)
+    record = iter.step(status)
+    assert_equal(Status::SUCCESS, status)
+    assert_equal("\0\0\0\0\0\0\0\0", record[0])
+    assert_equal("one", record[1])
+    record = iter.step(status)
+    assert_equal(Status::SUCCESS, status)
+    assert_equal("\0\0\0\0\0\0\0\1", record[0])
+    assert_equal("two", record[1])
+    record = iter.step(status)
+    assert_equal(Status::NOT_FOUND_ERROR, status)
+    assert_equal(nil, record)
+    record = dbm.pop_first(status)
+    assert_equal(Status::SUCCESS, status)
+    assert_equal("\0\0\0\0\0\0\0\0", record[0])
+    assert_equal("one", record[1])
+    record = dbm.pop_first(status)
+    assert_equal(Status::SUCCESS, status)
+    assert_equal("\0\0\0\0\0\0\0\1", record[0])
+    assert_equal("two", record[1])
+    record = dbm.pop_first(status)
+    assert_equal(Status::NOT_FOUND_ERROR, status)
+    assert_equal(nil, record)
+    assert_equal(0, dbm.count)
     iter.destruct    
     assert_equal(Status::SUCCESS, dbm.disconnect)
     dbm.destruct

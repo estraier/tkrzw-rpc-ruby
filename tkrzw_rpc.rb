@@ -672,6 +672,85 @@ module TkrzwRPC
       end
       make_status_from_proto(response.status)
     end
+
+    # Changes the key of a record.
+    # @param old_key The old key of the record.
+    # @param new_key The new key of the record.
+    # @param overwrite Whether to overwrite the existing record of the new key.
+    # @param copying Whether to retain the record of the old key.
+    # @return The result status.  If there's no matching record to the old key, NOT_FOUND_ERROR is returned.  If the overwrite flag is false and there is an existing record of the new key, DUPLICATION ERROR is returned.
+    # This method is done atomically.  The other threads observe that the record has either the old key or the new key.  No intermediate states are observed.
+    def rekey(old_key, new_key, overwrite=true, copying=false)
+      if not @channel
+        return Status.new(Status::PRECONDITION_ERROR, "not opened connection")
+      end
+      request = SetRequest.new
+      request.dbm_index = @dbm_index
+      request.old_key = make_string(old_key)
+      request.new_key = make_string(new_key)
+      request.overwrite = overwrite
+      request.copying = copying
+      begin
+        response = @stub.rekey(request)
+      rescue GRPC::BadStatus => error
+        return Status.new(Status::NETWORK_ERROR, str_grpc_error(error))
+      end
+      make_status_from_proto(response.status)
+    end
+
+    # Gets the first record and removes it.
+    # @param status A status object to which the result status is assigned.  It can be omitted.
+    # @return A tuple of The key and the value of the first record.  On failure, nil is returned.
+    def pop_first(status=nil)
+      if not @channel
+        if status
+          status.set(Status::PRECONDITION_ERROR, "not opened connection")
+        end
+        return nil
+      end
+      request = GetRequest.new
+      request.dbm_index = @dbm_index
+      begin
+        response = @stub.pop_first(request)
+      rescue GRPC::BadStatus => error
+        if status
+          status.set(Status::NETWORK_ERROR, str_grpc_error(error))
+        end
+        return nil
+      end
+      if status
+        set_status_from_proto(status, response.status)
+      end
+      if response.status.code == Status::SUCCESS
+        if @encoding
+          return [response.key.dup.force_encoding(@encoding),
+                  response.value.dup.force_encoding(@encoding)]
+        end
+        return [response.key, response.value]
+      end
+      nil
+    end
+
+    # Adds a record with a key of the current timestamp.
+    # @param value The value of the record.
+    # @param wtime The current wall time used to generate the key.  If it is nil, the system clock is used.
+    # @return The result status.
+    # The key is generated as an 8-bite big-endian binary string of the timestamp.  If there is an existing record matching the generated key, the key is regenerated and the attempt is repeated until it succeeds.
+    def push_last(value, wtime=nil)
+      if not @channel
+        return Status.new(Status::PRECONDITION_ERROR, "not opened connection")
+      end
+      request = PushLastRequest.new
+      request.dbm_index = @dbm_index
+      request.value = make_string(value)
+      request.wtime = wtime ? wtime : -1
+      begin
+        response = @stub.push_last(request)
+      rescue GRPC::BadStatus => error
+        return Status.new(Status::NETWORK_ERROR, str_grpc_error(error))
+      end
+      make_status_from_proto(response.status)
+    end
     
     # Gets the number of records.
     # @return The number of records on success, or nil on failure.
@@ -1278,6 +1357,34 @@ module TkrzwRPC
         return Status.new(Status::NETWORK_ERROR, str_grpc_error(error))
       end
       return make_status_from_proto(response.status)
+    end
+
+    # Gets the current record and moves the iterator to the next record.
+    # @param status A status object to which the result status is assigned.  It can be omitted.
+    # @return A tuple of The key and the value of the current record.  On failure, nil is returned.
+    def step(status=nil)
+      request = IterateRequest.new
+      request.dbm_index = @dbm.dbm_index
+      request.operation = IterateRequest::OpType::OP_STEP
+      begin
+        @req_it.request = request
+        @req_it.event.set
+        response = @res_it.next
+        @req_it.request = nil
+      rescue GRPC::BadStatus => error
+        return Status.new(Status::NETWORK_ERROR, str_grpc_error(error))
+      end
+      if status
+        set_status_from_proto(status, response.status)
+      end
+      if response.status.code == Status::SUCCESS
+        if @dbm.encoding
+          return [response.key.dup.force_encoding(@dbm.encoding),
+                  response.value.dup.force_encoding(@dbm.encoding)]
+        end
+        return [response.key, response.value]
+      end
+      nil
     end
 
     # Returns a string representation of the content.

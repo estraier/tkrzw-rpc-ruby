@@ -26,13 +26,15 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :message, :string, 1
     end
     add_message "tkrzw_rpc.EchoResponse" do
-      optional :echo, :string, 1
+      optional :status, :message, 1, "tkrzw_rpc.StatusProto"
+      optional :echo, :string, 2
     end
     add_message "tkrzw_rpc.InspectRequest" do
       optional :dbm_index, :int32, 1
     end
     add_message "tkrzw_rpc.InspectResponse" do
-      repeated :records, :message, 1, "tkrzw_rpc.StringPair"
+      optional :status, :message, 1, "tkrzw_rpc.StatusProto"
+      repeated :records, :message, 2, "tkrzw_rpc.StringPair"
     end
     add_message "tkrzw_rpc.GetRequest" do
       optional :dbm_index, :int32, 1
@@ -126,6 +128,36 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       repeated :desired, :message, 3, "tkrzw_rpc.RecordState"
     end
     add_message "tkrzw_rpc.CompareExchangeMultiResponse" do
+      optional :status, :message, 1, "tkrzw_rpc.StatusProto"
+    end
+    add_message "tkrzw_rpc.RekeyRequest" do
+      optional :dbm_index, :int32, 1
+      optional :old_key, :bytes, 2
+      optional :new_key, :bytes, 3
+      optional :overwrite, :bool, 4
+      optional :copying, :bool, 5
+    end
+    add_message "tkrzw_rpc.RekeyResponse" do
+      optional :status, :message, 1, "tkrzw_rpc.StatusProto"
+    end
+    add_message "tkrzw_rpc.PopFirstRequest" do
+      optional :dbm_index, :int32, 1
+      optional :omit_key, :bool, 2
+      optional :omit_value, :bool, 3
+      optional :retry_wait, :double, 4
+    end
+    add_message "tkrzw_rpc.PopFirstResponse" do
+      optional :status, :message, 1, "tkrzw_rpc.StatusProto"
+      optional :key, :bytes, 2
+      optional :value, :bytes, 3
+    end
+    add_message "tkrzw_rpc.PushLastRequest" do
+      optional :dbm_index, :int32, 1
+      optional :value, :bytes, 2
+      optional :wtime, :double, 3
+      optional :notify, :bool, 4
+    end
+    add_message "tkrzw_rpc.PushLastResponse" do
       optional :status, :message, 1, "tkrzw_rpc.StatusProto"
     end
     add_message "tkrzw_rpc.CountRequest" do
@@ -224,6 +256,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       value :OP_GET, 8
       value :OP_SET, 9
       value :OP_REMOVE, 10
+      value :OP_STEP, 11
     end
     add_message "tkrzw_rpc.IterateResponse" do
       optional :status, :message, 1, "tkrzw_rpc.StatusProto"
@@ -291,6 +324,12 @@ module TkrzwRPC
   IncrementResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.IncrementResponse").msgclass
   CompareExchangeMultiRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.CompareExchangeMultiRequest").msgclass
   CompareExchangeMultiResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.CompareExchangeMultiResponse").msgclass
+  RekeyRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.RekeyRequest").msgclass
+  RekeyResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.RekeyResponse").msgclass
+  PopFirstRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.PopFirstRequest").msgclass
+  PopFirstResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.PopFirstResponse").msgclass
+  PushLastRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.PushLastRequest").msgclass
+  PushLastResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.PushLastResponse").msgclass
   CountRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.CountRequest").msgclass
   CountResponse = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.CountResponse").msgclass
   GetFileSizeRequest = ::Google::Protobuf::DescriptorPool.generated_pool.lookup("tkrzw_rpc.GetFileSizeRequest").msgclass

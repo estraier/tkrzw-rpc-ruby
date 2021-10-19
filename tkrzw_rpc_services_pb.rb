@@ -40,6 +40,9 @@ module TkrzwRPC
       rpc :CompareExchange, ::TkrzwRPC::CompareExchangeRequest, ::TkrzwRPC::CompareExchangeResponse
       rpc :Increment, ::TkrzwRPC::IncrementRequest, ::TkrzwRPC::IncrementResponse
       rpc :CompareExchangeMulti, ::TkrzwRPC::CompareExchangeMultiRequest, ::TkrzwRPC::CompareExchangeMultiResponse
+      rpc :Rekey, ::TkrzwRPC::RekeyRequest, ::TkrzwRPC::RekeyResponse
+      rpc :PopFirst, ::TkrzwRPC::PopFirstRequest, ::TkrzwRPC::PopFirstResponse
+      rpc :PushLast, ::TkrzwRPC::PushLastRequest, ::TkrzwRPC::PushLastResponse
       rpc :Count, ::TkrzwRPC::CountRequest, ::TkrzwRPC::CountResponse
       rpc :GetFileSize, ::TkrzwRPC::GetFileSizeRequest, ::TkrzwRPC::GetFileSizeResponse
       rpc :Clear, ::TkrzwRPC::ClearRequest, ::TkrzwRPC::ClearResponse
