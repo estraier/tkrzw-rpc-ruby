@@ -1,4 +1,4 @@
-#! /usr/bin/ruby -I. -w
+#! /usr/bin/ruby -I.
 # -*- coding: utf-8 -*-
 
 require 'optparse'
