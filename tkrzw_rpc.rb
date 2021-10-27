@@ -238,14 +238,51 @@ module TkrzwRPC
     # Connects to the server.
     # @param address The address or the host name of the server and its port number.  For IPv4 address, it's like "127.0.0.1:1978".  For IPv6, it's like "[::1]:1978".  For UNIX domain sockets, it's like "unix:/path/to/file".
     # @param timeout The timeout in seconds for connection and each operation.  Negative means unlimited.
+    # @param auth_config The authentication configuration.  It it is empty or null, no authentication is done.  If it begins with "ssl:", the SSL authentication is done.  Key-value parameters in "key=value,key=value,..." format comes next.  For SSL, "key", "cert", and "root" parameters specify the paths of the client private key file, the client certificate file, and the root CA certificate file respectively.
     # @return The result status.
-    def connect(address, timeout=nil)
+    def connect(address, timeout=nil, auth_config=nil)
       if @channel
         return Status.new(Status::PRECONDITION_ERROR, "opened connection")
       end
       timeout = timeout == nil ? 1 << 27 : timeout
       begin
-        channel = GRPC::ClientStub.setup_channel(nil, address, :this_channel_is_insecure)
+        if auth_config and not auth_config.empty?
+          if auth_config.start_with?("ssl:")
+            key_path, cert_path, root_path = nil, nil, nil
+            auth_config[4..-1].split(",").each { |field|
+              columns = field.split("=")
+              if columns.length == 2
+                case columns[0]
+                when "key"
+                  key_path = columns[1]
+                when "cert"
+                  cert_path = columns[1]
+                when "root"
+                  root_path = columns[1]
+                end
+              end
+            }
+            if not key_path
+              return Status.new(Status::INVALID_ARGUMENT_ERROR, "client private key unspecified")
+            end
+            if not cert_path
+              return Status.new(Status::INVALID_ARGUMENT_ERROR, "client certificate unspecified")
+            end
+            if not root_path
+              return Status.new(Status::INVALID_ARGUMENT_ERROR, "root certificate unspecified")
+            end
+            key_data = File.read(key_path)
+            cert_data = File.read(cert_path)
+            root_data = File.read(root_path)
+            credentials = GRPC::Core::ChannelCredentials.new(root_data, key_data, cert_data)
+            channel = GRPC::ClientStub.setup_channel(nil, address, credentials)
+          else
+            return Status.new(Status::INVALID_ARGUMENT_ERROR, "unknown authentication mode")
+          end
+        else
+          credentials = :this_channel_is_insecure
+        end
+        channel = GRPC::ClientStub.setup_channel(nil, address, credentials)
         deadline = Time.now + timeout
         max_failures = 3
         num_failures = 0
@@ -269,7 +306,7 @@ module TkrzwRPC
           end
           channel.watch_connectivity_state(state, Time.now + 0.1) 
         end
-        stub = DBMService::Stub.new(address, :this_channel_is_insecure,
+        stub = DBMService::Stub.new(address, credentials,
                                     channel_override: @channel, timeout: timeout)
       rescue GRPC::BadStatus => error
         return Status.new(Status::NETWORK_ERROR, str_grpc_error(error))

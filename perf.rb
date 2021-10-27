@@ -10,11 +10,13 @@ include TkrzwRPC
 # main routine
 def main
   address = "localhost:1978"
+  auth_config = ""
   num_iterations = 10000
   num_threads = 1
   is_random = false
   op = OptionParser.new
   op.on('--address str') { |v| address = v }
+  op.on('--auth str') { |v| auth_config = v }
   op.on('--iter num') { |v| num_iterations = v.to_i }
   op.on('--threads num') { |v| num_threads = v.to_i }
   op.on('--random') { is_random = true }
@@ -26,7 +28,7 @@ def main
   printf("\n")
   GC.start
   dbm = RemoteDBM.new
-  dbm.connect(address).or_die
+  dbm.connect(address, nil, auth_config).or_die
   dbm.clear.or_die
   print("Echoing:\n")
   start_time = Time.now
