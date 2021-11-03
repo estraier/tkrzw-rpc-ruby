@@ -21,6 +21,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :existence, :bool, 1
       optional :key, :bytes, 2
       optional :value, :bytes, 3
+      optional :any_value, :bool, 4
     end
     add_message "tkrzw_rpc.EchoRequest" do
       optional :message, :string, 1
@@ -106,11 +107,16 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :key, :bytes, 2
       optional :expected_existence, :bool, 3
       optional :expected_value, :bytes, 4
-      optional :desired_existence, :bool, 5
-      optional :desired_value, :bytes, 6
+      optional :expect_any_value, :bool, 5
+      optional :desired_existence, :bool, 6
+      optional :desired_value, :bytes, 7
+      optional :desire_no_update, :bool, 8
+      optional :get_actual, :bool, 9
     end
     add_message "tkrzw_rpc.CompareExchangeResponse" do
       optional :status, :message, 1, "tkrzw_rpc.StatusProto"
+      optional :actual, :bytes, 2
+      optional :found, :bool, 3
     end
     add_message "tkrzw_rpc.IncrementRequest" do
       optional :dbm_index, :int32, 1

@@ -105,6 +105,29 @@ class TkrzwTest < Test::Unit::TestCase
     assert_equal(Status::SUCCESS, dbm.compare_exchange("one", nil, "hello"))
     assert_equal("hello", dbm.get("one"))
     assert_equal(Status::INFEASIBLE_ERROR, dbm.compare_exchange("one", nil, "hello"))
+    status, value = dbm.compare_exchange_and_get("xyz", RemoteDBM::ANY_DATA, RemoteDBM::ANY_DATA)
+    assert_equal(Status::INFEASIBLE_ERROR, status)
+    assert_equal(nil, value)
+    status, value = dbm.compare_exchange_and_get("xyz", nil, "abc")
+    assert_equal(Status::SUCCESS, status)
+    assert_equal(nil, value)
+    status, value = dbm.compare_exchange_and_get("xyz", RemoteDBM::ANY_DATA, "def")
+    assert_equal(Status::SUCCESS, status)
+    assert_equal("abc", value)
+    status, value = dbm.compare_exchange_and_get("xyz", "def", nil)
+    assert_equal(Status::SUCCESS, status)
+    assert_equal("def", value)
+    assert_equal(nil, dbm.get("xyz"))
+    assert_equal(Status::INFEASIBLE_ERROR, dbm.compare_exchange(
+      "xyz", RemoteDBM::ANY_DATA, RemoteDBM::ANY_DATA))
+    assert_equal(Status::SUCCESS, dbm.compare_exchange("xyz", nil, "abc"))
+    assert_equal(Status::SUCCESS, dbm.compare_exchange(
+      "xyz", RemoteDBM::ANY_DATA, RemoteDBM::ANY_DATA))
+    assert_equal("abc", dbm.get("xyz"))
+    assert_equal(Status::SUCCESS, dbm.compare_exchange("xyz", RemoteDBM::ANY_DATA, "def"))
+    assert_equal("def", dbm.get("xyz"))
+    assert_equal(Status::SUCCESS, dbm.compare_exchange("xyz", RemoteDBM::ANY_DATA, nil))
+    assert_equal(nil, dbm.get("xyz"))
     assert_equal(Status::SUCCESS, dbm.compare_exchange_multi(
                    [["one", "hello"], ["two", "second:2"]], [["one", nil], ["two", nil]]))
     assert_equal(nil, dbm.get("one"))
@@ -113,6 +136,17 @@ class TkrzwTest < Test::Unit::TestCase
                    [["one", nil], ["two", nil]], [["one", "first"], ["two", "second"]]))
     assert_equal("first", dbm.get("one"))
     assert_equal("second", dbm.get("two"))
+    assert_equal(Status::INFEASIBLE_ERROR, dbm.compare_exchange_multi(    
+                   [["xyz", RemoteDBM::ANY_DATA]], [["xyz", "abc"]]))
+    assert_equal(Status::SUCCESS, dbm.compare_exchange_multi(    
+                   [["xyz", nil]], [["xyz", "abc"]]))
+    assert_equal("abc", dbm.get("xyz"))
+    assert_equal(Status::SUCCESS, dbm.compare_exchange_multi(    
+                   [["xyz", RemoteDBM::ANY_DATA]], [["xyz", "def"]]))
+    assert_equal("def", dbm.get("xyz"))
+    assert_equal(Status::SUCCESS, dbm.compare_exchange_multi(    
+                   [["xyz", RemoteDBM::ANY_DATA]], [["xyz", nil]]))
+    assert_equal(nil, dbm.get("xyz"))
     status = Status.new(Status::UNKNOWN_ERROR)
     assert_equal(105, dbm.increment("num", 5, 100, status))
     assert_equal(Status::SUCCESS, status)
@@ -228,7 +262,6 @@ class TkrzwTest < Test::Unit::TestCase
     else
       assert_equal(Status::NOT_IMPLEMENTED_ERROR, status)
     end
-
     dbm.clear
     dbm.push_last("one", 0)
     dbm.push_last("two", 0)

@@ -1,7 +1,7 @@
 # Makefile for Tkrzw-RPC for Ruby
 
 PACKAGE = tkrzw-rpc-ruby
-VERSION = 0.1.2
+VERSION = 0.1.3
 PACKAGEDIR = $(PACKAGE)-$(VERSION)
 PACKAGETGZ = $(PACKAGE)-$(VERSION).tar.gz
 
@@ -65,7 +65,7 @@ apidoc :
 apidocclean :
 	rm -rf api-doc tmp-doc
 
-pbrb : tkrzw_rpc.proto
+protocode : tkrzw_rpc.proto
 	grpc_tools_ruby_protoc -I . --ruby_out=. --grpc_out=. tkrzw_rpc.proto
 	sed -e 's/TkrzwRpc/TkrzwRPC/g' tkrzw_rpc_pb.rb > tkrzw_rpc_pb.rb~ ;\
 	  mv -f tkrzw_rpc_pb.rb~ tkrzw_rpc_pb.rb

@@ -216,6 +216,9 @@ module TkrzwRPC
   class RemoteDBM
     include TkrzwRPC
     attr_reader :channel, :stub, :timeout, :dbm_index, :encoding
+
+    # The special bytes value for no-operation or any data.
+    ANY_DATA = "\x00[ANY]\x00"
     
     # Does nothing especially.
     def initialize
@@ -612,8 +615,8 @@ module TkrzwRPC
 
     # Compares the value of a record and exchanges if the condition meets.
     # @param key The key of the record.
-    # @param expected The expected value.  If it is None, no existing record is expected.
-    # @param desired The desired value.  If it is nil, the record is to be removed.
+    # @param expected The expected value.  If it is nil, no existing record is expected.  If it is ANY_DATA, an existing record with any value is expacted.
+    # @param desired The desired value.  If it is nil, the record is to be removed.  If it is ANY_DATA, no update is done.
     # @return The result status.  If the condition doesn't meet, INFEASIBLE_ERROR is returned.
     def compare_exchange(key, expected, desired)
       if not @channel
@@ -623,12 +626,21 @@ module TkrzwRPC
       request.dbm_index = @dbm_index
       request.key = make_string(key)
       if expected != nil
-        request.expected_existence = true
-        request.expected_value = make_string(expected)
+        if expected.equal?(ANY_DATA)
+          request.expected_existence = true
+          request.expect_any_value = true
+        else
+          request.expected_existence = true
+          request.expected_value = make_string(expected)
+        end
       end
       if desired != nil
-        request.desired_existence = true
-        request.desired_value = make_string(desired)
+        if desired.equal?(ANY_DATA)
+          request.desire_no_update = true
+        else
+          request.desired_existence = true
+          request.desired_value = make_string(desired)
+        end
       end
       begin
         response = @stub.compare_exchange(request)
@@ -636,6 +648,51 @@ module TkrzwRPC
         return Status.new(Status::NETWORK_ERROR, str_grpc_error(error))
       end
       make_status_from_proto(response.status)
+    end
+
+    # Does compare-and-exchange and/or gets the old value of the record.
+    # @param key The key of the record.
+    # @param expected The expected value.  If it is nil, no existing record is expected.  If it is ANY_DATA, an existing record with any value is expacted.
+    # @param desired The desired value.  If it is nil, the record is to be removed.  If it is ANY_DATA, no update is done.
+    # @return A pair of the result status and the.old value of the record.  If the condition doesn't meet, the state is INFEASIBLE_ERROR.  If there's no existing record, the value is nil.
+    def compare_exchange_and_get(key, expected, desired)
+      if not @channel
+        return [Status.new(Status::PRECONDITION_ERROR, "not opened connection"), nil]
+      end
+      request = CompareExchangeRequest.new
+      request.dbm_index = @dbm_index
+      request.key = make_string(key)
+      if expected != nil
+        if expected.equal?(ANY_DATA)
+          request.expected_existence = true
+          request.expect_any_value = true
+        else
+          request.expected_existence = true
+          request.expected_value = make_string(expected)
+        end
+      end
+      if desired != nil
+        if desired.equal?(ANY_DATA)
+          request.desire_no_update = true
+        else
+          request.desired_existence = true
+          request.desired_value = make_string(desired)
+        end
+      end
+      request.get_actual = true
+      begin
+        response = @stub.compare_exchange(request)
+      rescue GRPC::BadStatus => error
+        return [Status.new(Status::NETWORK_ERROR, str_grpc_error(error)), nil]
+      end
+      actual = nil
+      if response.found
+        actual = response.actual
+        if @encoding
+          actual = actual.dup.force_encoding(@encoding)
+        end
+      end
+      [make_status_from_proto(response.status), actual]
     end
 
     # Increments the numeric value of a record.
@@ -675,7 +732,7 @@ module TkrzwRPC
     end
 
     # Compares the values of records and exchanges if the condition meets.
-    # @param expected An array of pairs of the record keys and their expected values.  If the value is nil, no existing record is expected.
+    # @param expected An array of pairs of the record keys and their expected values.  If the value is nil, no existing record is expected.  If the value is ANY_DATA, an existing record with any value is expacted.
     # @param desired An array of pairs of the record keys and their desired values.  If the value is nil, the record is to be removed.
     # @return The result status.  If the condition doesn't meet, INFEASIBLE_ERROR is returned.
     def compare_exchange_multi(expected, desired)
@@ -687,18 +744,25 @@ module TkrzwRPC
       expected.each { |elem|
         state = RecordState.new
         state.key = make_string(elem[0])
-        if elem[1] != nil
-          state.existence = true
-          state.value = make_string(elem[1])
+        value = elem[1]
+        if value != nil
+          if value.equal?(ANY_DATA)
+            state.existence = true
+            state.any_value = true
+          else
+            state.existence = true
+            state.value = make_string(value)
+          end
         end
         request.expected.push(state)
       }
       desired.each { |elem|
         state = RecordState.new
         state.key = make_string(elem[0])
-        if elem[1] != nil
+        value = elem[1]
+        if value != nil
           state.existence = true
-          state.value = make_string(elem[1])
+          state.value = make_string(value)
         end
         request.desired.push(state)
       }
@@ -1126,8 +1190,8 @@ module TkrzwRPC
       begin
         @res_it = dbm.stub.iterate(@req_it.each_item)
       rescue GRPC::BadStatus
-        @dbm = None
-        @req_it = None
+        @dbm = nil
+        @req_it = nil
       end
     end
 
