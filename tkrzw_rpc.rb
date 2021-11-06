@@ -654,8 +654,10 @@ module TkrzwRPC
     # @param key The key of the record.
     # @param expected The expected value.  If it is nil, no existing record is expected.  If it is ANY_DATA, an existing record with any value is expacted.
     # @param desired The desired value.  If it is nil, the record is to be removed.  If it is ANY_DATA, no update is done.
+    # @param retry_wait The maximum wait time in seconds before retrying.  If it is nil, no retry is done.  If it is positive, retry is done after waiting for the notifications of the next update for the time at most.
+    # @param notify If true, a notification signal is sent to wake up retrying threads.
     # @return A pair of the result status and the.old value of the record.  If the condition doesn't meet, the state is INFEASIBLE_ERROR.  If there's no existing record, the value is nil.
-    def compare_exchange_and_get(key, expected, desired)
+    def compare_exchange_advanced(key, expected, desired, retry_wait=nil, notify=false)
       if not @channel
         return [Status.new(Status::PRECONDITION_ERROR, "not opened connection"), nil]
       end
@@ -680,6 +682,8 @@ module TkrzwRPC
         end
       end
       request.get_actual = true
+      request.retry_wait = retry_wait ? retry_wait : 0
+      request.notify = notify
       begin
         response = @stub.compare_exchange(request)
       rescue GRPC::BadStatus => error
@@ -785,7 +789,7 @@ module TkrzwRPC
       if not @channel
         return Status.new(Status::PRECONDITION_ERROR, "not opened connection")
       end
-      request = SetRequest.new
+      request = RekeyRequest.new
       request.dbm_index = @dbm_index
       request.old_key = make_string(old_key)
       request.new_key = make_string(new_key)
@@ -800,17 +804,19 @@ module TkrzwRPC
     end
 
     # Gets the first record and removes it.
+    # @param retry_wait The maximum wait time in seconds before retrying.  If it is nil, no retry is done.  If it is positive, retry is done after waiting for the notifications of the next update for the time at most.
     # @param status A status object to which the result status is assigned.  It can be omitted.
     # @return A tuple of The key and the value of the first record.  On failure, nil is returned.
-    def pop_first(status=nil)
+    def pop_first(retry_wait=nil, status=nil)
       if not @channel
         if status
           status.set(Status::PRECONDITION_ERROR, "not opened connection")
         end
         return nil
       end
-      request = GetRequest.new
+      request = PopFirstRequest.new
       request.dbm_index = @dbm_index
+      request.retry_wait = retry_wait ? retry_wait : 0
       begin
         response = @stub.pop_first(request)
       rescue GRPC::BadStatus => error
@@ -835,9 +841,10 @@ module TkrzwRPC
     # Adds a record with a key of the current timestamp.
     # @param value The value of the record.
     # @param wtime The current wall time used to generate the key.  If it is nil, the system clock is used.
+    # @param notify If true, notification signal is sent.
     # @return The result status.
     # The key is generated as an 8-bite big-endian binary string of the timestamp.  If there is an existing record matching the generated key, the key is regenerated and the attempt is repeated until it succeeds.
-    def push_last(value, wtime=nil)
+    def push_last(value, wtime=nil, notify=false)
       if not @channel
         return Status.new(Status::PRECONDITION_ERROR, "not opened connection")
       end
@@ -845,6 +852,7 @@ module TkrzwRPC
       request.dbm_index = @dbm_index
       request.value = make_string(value)
       request.wtime = wtime ? wtime : -1
+      request.notify = notify
       begin
         response = @stub.push_last(request)
       rescue GRPC::BadStatus => error

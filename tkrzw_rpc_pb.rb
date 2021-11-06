@@ -112,6 +112,8 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :desired_value, :bytes, 7
       optional :desire_no_update, :bool, 8
       optional :get_actual, :bool, 9
+      optional :retry_wait, :double, 10
+      optional :notify, :bool, 11
     end
     add_message "tkrzw_rpc.CompareExchangeResponse" do
       optional :status, :message, 1, "tkrzw_rpc.StatusProto"
