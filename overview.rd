@@ -42,24 +42,29 @@ The following code is a typical example to use a database.  A RemoteDBM object c
   dbm = TkrzwRPC::RemoteDBM.new
   dbm.connect("localhost:1978")
   dbm.clear
-   
+  
   # Sets records.
   dbm["first"] = "hop"
   dbm["second"] = "step"
   dbm["third"] = "jump"
-   
+  
   # Retrieves record values.
   # If the operation fails, nil is returned.
   p dbm["first"]
   p dbm["second"]
   p dbm["third"]
   p dbm["fourth"]
-   
+  
+  # Checks and deletes a record.
+  if dbm.include?("first")
+    dbm.remove("first")
+  end
+  
   # Traverses records.
   dbm.each do |key, value|
     p key + ": " + value
   end
-   
+  
   # Closes and the connection and releases the resources.
   dbm.disconnect
   dbm.destruct

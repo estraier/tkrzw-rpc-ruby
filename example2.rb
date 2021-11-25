@@ -1,4 +1,4 @@
-#! /usr/bin/ruby -I. -w
+#! /usr/bin/ruby -I.
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
 # Example for basic usage of the remote database
@@ -34,13 +34,13 @@ begin
   dbm.set(1, "hop").or_die
   dbm.set(2, "step").or_die
   dbm.set(3, "jump").or_die
- 
+
   # Retrieves records without checking errors.
   p dbm.get(1)
   p dbm.get(2)
   p dbm.get(3)
   p dbm.get(4)
- 
+
   # To know the status of retrieval, give a status object to "get".
   # You can compare a status object and a status code directly.
   status = TkrzwRPC::Status.new
@@ -49,11 +49,11 @@ begin
   if status == TkrzwRPC::Status::SUCCESS
     printf("value: %s\n", value)
   end
- 
+
   # Rebuilds the database.
   # Optional parameters compatible with the database type can be given.
   dbm.rebuild
- 
+
   # Traverses records with an iterator.
   begin
     iter = dbm.make_iterator

@@ -416,6 +416,25 @@ module TkrzwRPC
       response.echo
     end
 
+    # Checks if a record exists or not.
+    # @param key The key of the record.
+    # @return True if the record exists, or false if not.
+    def include?(key)
+      if not @channel
+        return false
+      end
+      request = GetRequest.new
+      request.dbm_index = @dbm_index
+      request.key = make_string(key)
+      request.omit_value = true
+      begin
+        response = @stub.get(request)
+      rescue GRPC::BadStatus => error
+        return false
+      end
+      return response.status.code == Status::SUCCESS
+    end
+
     # Gets the value of a record of a key.
     # @param key The key of the record.
     # @param status A status object to which the result status is assigned.  It can be omitted.
